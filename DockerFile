@@ -1,14 +1,33 @@
-# --- STAGE 1: Build the React application ---
+# ==========================================
+# STAGE 1: Build the React Application
+# ==========================================
+# මෙතැනදී අපි Node.js පාවිච්චි කරලා React ඇප් එක ප්‍රොඩක්ෂන් බිල්ඩ් එකක් (Static files) බවට පත් කරනවා.
 FROM node:18-alpine AS builder
+
+# කන්ටේනර් එක ඇතුළේ වැඩ කරන වර්කින් ෆෝල්ඩර් එක
 WORKDIR /app
+
+# ඩිපෙන්ඩන්සිස් (Dependencies) ඉන්ස්ටෝල් කරගැනීම
 COPY package*.json ./
 RUN npm install
+
+# ඉතිරි කෝඩ්ස් ටික කන්ටේනර් එකට කොපි කරලා බිල්ඩ් කිරීම
 COPY . .
 RUN npm run build
 
-# --- STAGE 2: Serve using Nginx ---
+
+# ==========================================
+# STAGE 2: Serve using Nginx (Production)
+# ==========================================
+# බිල්ඩ් වුණු සැහැල්ලු ෆයිල් ටික ලෝකයට සර්ව් කරන්න වේගවත් Nginx වෙබ් සර්වර් එක පාවිච්චි කරනවා.
 FROM nginx:alpine
-# අපි කලින් හදාගත් nginx.conf එක කොපි කිරීම (නැත්නම් ඩිෆෝල්ට් Nginx පාවිච්චි වේ)
+
+# ස්ටේජ් 1 එකේ හැදුණු 'dist' (သို့မဟုတ် build) ෆෝල්ඩර් එක Nginx ෆෝල්ඩර් එකට කොපි කිරීම
+# (සැළකිය යුතුයි: Vite පාවිච්චි කරන නිසා අවුට්පුට් එක එන්නේ 'dist' ෆෝල්ඩර් එකටයි)
 COPY --from=builder /app/dist /usr/share/nginx/html
+
+# 80 වෙනි පෝට් එක ලෝකයට විවෘත කිරීම
 EXPOSE 80
+
+# Nginx සර්වර් එක සජීවීව (foreground) රන් කිරීම
 CMD ["nginx", "-g", "daemon off;"]
